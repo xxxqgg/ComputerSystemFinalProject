@@ -29,7 +29,11 @@ void main_loop() {
         for (int i = 0; args[i] != NULL; i++) {
             printf("%s\n", args[i]);
         }
-
+        bool result = jsh_execute(args);
+        if (result == false) {
+            // TODO: Check what's wrong.
+            printf("Something went wrong.\n");
+        }
         free(args);
     }
 }

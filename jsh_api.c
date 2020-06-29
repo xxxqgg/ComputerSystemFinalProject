@@ -8,6 +8,8 @@
 #include "jsh_api.h"
 #include "utils.h"
 #include "jsh_config.h"
+#include "builtins.h"
+#include "SimpleFileSystem/FileSystemAPI.h"
 
 int jsh_read_line(char *buffer, int size) {
     return getLine(get_prompt(), buffer, size);
@@ -27,4 +29,15 @@ char **jsh_split_line(char *line) {
     res[index] = NULL;
 
     return res;
+}
+int jsh_execute(char **args) {
+    if (args == NULL || args[0] == NULL)
+        return true;
+    if (is_builtin(args)) {
+        return exec_builtin(args);
+    }
+    if (is_file_system_api(args)) {
+        return exec_api(args);
+    }
+    return true;
 }
