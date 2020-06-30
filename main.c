@@ -12,7 +12,7 @@
 void main_loop();
 
 int main() {
-    printf("Hello, World!\n");
+
     main_loop();
     return 0;
 }
@@ -26,9 +26,6 @@ void main_loop() {
             break;
         }
         args = jsh_split_line(buffer);
-        for (int i = 0; args[i] != NULL; i++) {
-            printf("%s\n", args[i]);
-        }
         bool result = jsh_execute(args);
         if (result == false) {
             // TODO: Check what's wrong.

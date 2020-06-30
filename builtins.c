@@ -1,10 +1,11 @@
 #include "builtins.h"
 #include <stdio.h>
 #include "unistd.h"
-
+#include "SimpleFileSystem/FileSystemAPI.h"
 
 
 int jsh_exit(char **args) {
+    detach();
     exit(0);
 }
 

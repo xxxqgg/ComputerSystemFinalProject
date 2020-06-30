@@ -8,12 +8,11 @@
 #include "FileSystemTypes.h"
 
 int shared_memory_key;
-int shared_memory_size;
 Disk *disk;
 char current_path[MAX_FILE_NAME_LEN];
 DIR* current_dir;
 FCB* current_fcb;
-
+int shared_memory_size;
 int FAT1[MAX_BLOCK_NUM];
 int FAT2[MAX_BLOCK_NUM];
 int FAT_LEN = sizeof(FAT1);

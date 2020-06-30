@@ -12,12 +12,16 @@ bool format_disk(char **args);
 bool mkdir(char **args);
 bool ls(char **args);
 bool cd(char **args);
+bool touch(char **args);
+bool rm(char **args);
 static const char *api_str[] = {
         "init",
         "format",
         "mkdir",
         "ls",
         "cd",
+        "touch",
+        "rm",
 
 };
 static bool (* const apis[]) (char**) = {
@@ -26,12 +30,14 @@ static bool (* const apis[]) (char**) = {
         &mkdir,
         &ls,
         &cd,
+        &touch,
+        &rm,
 };
 static int num_of_api() {
     return sizeof(api_str) / sizeof(char *);
 }
 bool is_file_system_api(char **args);
-
+void detach();
 int exec_api(char **args);
 char *get_pwd();
 
