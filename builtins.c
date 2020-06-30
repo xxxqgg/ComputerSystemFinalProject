@@ -22,7 +22,7 @@ int help(char **args) {
     printf("%-10s  %s\n", "rmdir", "remove directory");
     printf("%-10s  %s\n", "open", "open a file");
     printf("%-10s  %s\n", "close", "close a file");
-    printf("%-10s  %s\n", "write", "write to fd");
+    printf("%-10s  %s\n", "write", "write_data to fd");
     printf("%-10s  %s\n", "read", "read from fd");
     return true;
 }

@@ -108,7 +108,9 @@ bool init_file_system(char **args) {
         perror("Shared memory has not been created yet");
         exit(1);
     } else {
+
         printf("Shared memory init successfully with it's id = %d\n", shared_memory_id);
+        printf("Disk size = %d\n", shared_memory_size);
         disk = (Disk *) shmat(shared_memory_id, 0, 0);
         if (disk == NULL) {
             fprintf(stderr, "Error: disk mounting error!\n");
@@ -429,7 +431,12 @@ bool touch(char **args) {
         fprintf(stderr, "The folder is full\n");
         return false;
     }
-
+    int index_in_disk = find_empty_block_in_FAT(-1);
+    if (index_in_disk == -1 ) {
+        fprintf(stderr, "The disk is full.\n");
+        return false;
+    }
+    current_dir->content[index_in_dir].base_index = index_in_disk;
     current_dir->content[index_in_dir].is_dir = false;
     strcpy(current_dir->content[index_in_dir].name , args[1]);
     current_dir->content[index_in_dir].is_free = false;
@@ -466,5 +473,41 @@ bool rm(char **args) {
     __rm_fcb(&current_dir->content[index_in_folder]);
     current_dir->content[index_in_folder].is_free = true;
     write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    return true;
+}
+
+bool write_data(char **args) {
+    if (args[1] == NULL || args[2] != NULL) {
+        fprintf(stderr, "Usage: touch filename\n");
+        return false;
+    }
+    read_current_dir();
+    int index_in_dir = find_index_in_current_dir_by_name(args[1]);
+    if (index_in_dir == -1) {
+        fprintf(stderr, "%s not found\n", args[1]);
+        return false;
+    }
+    char buffer[1024];
+    strcpy(buffer, "TODO: change write_data method later.\n");
+    current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
+    write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    return true;
+}
+
+bool cat(char **args) {
+    if (args[1] == NULL || args[2] != NULL) {
+        fprintf(stderr, "Usage: touch filename\n");
+        return false;
+    }
+    read_current_dir();
+    int index_in_dir = find_index_in_current_dir_by_name(args[1]);
+    if (index_in_dir == -1) {
+        fprintf(stderr, "%s not found\n", args[1]);
+        return false;
+    }
+    char *data =(char*) read_from_disk(&current_dir->content[index_in_dir]);
+    printf("%s\n", data);
+    free(data);
     return true;
 }
