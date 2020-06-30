@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <pwd.h>
 #include "SimpleFileSystem/FileSystemAPI.h"
+
 #define BUFF_MAX_SIZE 256
 
 char *get_prompt() {
@@ -15,12 +16,11 @@ char *get_prompt() {
 
 //    getlogin_r(username, sizeof(username));
 
-    // TODO: change current dir later
 
     char *username = getpwuid(getuid())->pw_name;
 
     if (configuration.prompt == NULL) {
-        configuration.prompt = (char*) malloc(4 * BUFF_MAX_SIZE * sizeof(char));
+        configuration.prompt = (char *) malloc(4 * BUFF_MAX_SIZE * sizeof(char));
     }
 
     strcpy(configuration.prompt, "\033[0;34m");

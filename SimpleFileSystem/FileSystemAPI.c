@@ -140,7 +140,6 @@ DIR *init_dir(int block_index, int father_block_index) {
     FCB self;
     strcpy(self.name, ".");
     self.base_index = block_index;
-//TODO: File size for dir ?
 
     self.file_size = sizeof(DIR);
     self.is_free = false;
@@ -247,7 +246,6 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
             memcpy(disk->data[block_index], data + written_size, BLOCK_SIZE);
             written_size += BLOCK_SIZE;
         }
-        // TODO: set -1
         // 处理文件剩余大小不满一整块时的情况
         if (written_size < size) {
             block_index = next_block_index;
@@ -258,6 +256,7 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
             disk->FAT2[block_index] = -1;
             memcpy(disk->data[block_index], data + written_size, size - written_size);
         } else if (written_size == size) {
+            // 当文件刚好写入，设置最后写入的块的 FAT 为 -1
             disk->FAT1[block_index] = -1;
             disk->FAT2[block_index] = -1;
         } else {
@@ -385,11 +384,15 @@ bool ls(char **args) {
     for (int i = 0; i < MAX_CONTENT_NUM; i++) {
         if (current_dir->content[i].is_free == false) {
             char *type;
+            int file_size = 0;
             if (current_dir->content[i].is_dir) {
                 type = "Dir";
+
             } else {
                 type = "File";
             }
+
+
             printf("%-20s%-20s%-10d\n", current_dir->content[i].name, type, current_dir->content[i].file_size);
         }
     }
@@ -491,9 +494,16 @@ bool rm(char **args) {
 }
 
 bool write_data(char **args) {
-    if (args[1] == NULL || args[2] != NULL) {
-        fprintf(stderr, "Usage: touch filename\n");
+    if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
+        fprintf(stderr, "write usage:\n");
+        fprintf(stderr, "write filename [a|w]\n");
+        fprintf(stderr, "a for [a]ppend, w for [w]rite");
         return false;
+    }
+    if (strcmp(args[2], "w") != 0 && strcmp(args[2], "a") != 0) {
+        fprintf(stderr, "write usage:\n");
+        fprintf(stderr, "write filename [a|w]\n");
+        fprintf(stderr, "a for [a]ppend, w for [w]rite");
     }
     read_current_dir();
     int index_in_dir = find_index_in_current_dir_by_name(args[1]);
@@ -501,11 +511,25 @@ bool write_data(char **args) {
         fprintf(stderr, "%s not found\n", args[1]);
         return false;
     }
-    char buffer[1024];
-//    TODO: implement getting data from user later.
-    strcpy(buffer, "TODO: change write_data method later.\n");
-    current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
-    write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+    if (strcmp(args[2], "w") == 0) {
+        char buffer[BUFFER_SIZE];
+        fgets(buffer, BUFFER_SIZE, stdin);
+        printf("BUFFER:\n");
+        printf("%s", buffer);
+        current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
+        write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+    } else if (strcmp(args[2], "a") == 0) {
+        char *buffer = malloc(current_dir->content[index_in_dir].file_size + BUFFER_SIZE);
+        char *current_data = (char *) read_from_disk(&current_dir->content[index_in_dir]);
+        memcpy(buffer, current_data, current_dir->content[index_in_dir].file_size);
+        char input_buffer[BUFFER_SIZE];
+        fgets(input_buffer, BUFFER_SIZE, stdin);
+        memcpy(buffer + current_dir->content[index_in_dir].file_size, input_buffer, BUFFER_SIZE);
+        current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
+        write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+        free(current_data);
+        free(buffer);
+    }
     write_to_disk(current_fcb, current_dir, current_fcb->file_size);
     return true;
 }
@@ -557,7 +581,7 @@ bool rm_dir(char **args) {
 }
 
 bool is_dir_empty(FCB *fcb) {
-    DIR *dir = (DIR*) read_from_disk(fcb);
+    DIR *dir = (DIR *) read_from_disk(fcb);
     if (dir == NULL) {
         return false;
     }
