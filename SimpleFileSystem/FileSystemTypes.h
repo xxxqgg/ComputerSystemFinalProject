@@ -16,8 +16,8 @@ typedef struct FCB {
 
         // Only when is free is True, is_dir may be true.
         bool is_dir;
-        short file_size;
-        short base_index;
+        int file_size;
+        int base_index;
 } FCB;
 
 // DIR store in ONE BLOCK, size = 4KB
@@ -28,8 +28,8 @@ typedef struct DIR {
 
 // 4198400
 typedef struct Disk {
-    short FAT1[MAX_BLOCK_NUM];
-    short FAT2[MAX_BLOCK_NUM]; // SIZE: 2048
+    int FAT1[MAX_BLOCK_NUM];
+    int FAT2[MAX_BLOCK_NUM]; // SIZE: 2048
     byte data[MAX_BLOCK_NUM][BLOCK_SIZE];
 } Disk;
 

@@ -11,11 +11,13 @@ bool init_file_system(char **args);
 bool format_disk(char **args);
 bool mkdir(char **args);
 bool ls(char **args);
+bool cd(char **args);
 static const char *api_str[] = {
         "init",
         "format",
         "mkdir",
         "ls",
+        "cd",
 
 };
 static bool (* const apis[]) (char**) = {
@@ -23,6 +25,7 @@ static bool (* const apis[]) (char**) = {
         &format_disk,
         &mkdir,
         &ls,
+        &cd,
 };
 static int num_of_api() {
     return sizeof(api_str) / sizeof(char *);

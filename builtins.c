@@ -2,12 +2,7 @@
 #include <stdio.h>
 #include "unistd.h"
 
-int cd(char **args) {
-    if (args[1] == NULL)
-        return -1;
-    chdir(args[1]);
-    return 1;
-}
+
 
 int jsh_exit(char **args) {
     exit(0);
@@ -38,7 +33,6 @@ bool is_builtin(char **args) {
         if (strcmp(args[0], builtin_str[i]) == 0)
             return true;
     }
-
     return false;
 }
 
