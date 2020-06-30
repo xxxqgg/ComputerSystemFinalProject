@@ -23,6 +23,8 @@ bool write_to_disk(FCB *fcb, void *data, int size);
 
 bool did_format();
 
+bool is_dir_empty(FCB *fcb);
+
 static void read_current_dir() {
     if (current_dir != NULL) {
         free(current_dir);
@@ -199,6 +201,7 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
      * 如果该位置曾今有数据，将这部分数据抹除
      * 要抹除是为了更新数据时，将数据写入原地址中。
      */
+
     while (disk->FAT1[block] != -1 && disk->FAT1[block] != 0) {
         int prev = block;
         block = disk->FAT1[block];
@@ -232,7 +235,6 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
         int next_block_index = find_empty_block_in_FAT(block_index);
         disk->FAT1[block_index] = next_block_index;
         disk->FAT2[block_index] = next_block_index;
-        printf("%d\n", written_size + BLOCK_SIZE);
         // 当文件剩余大小有一整块时，写入一块
         while (written_size + BLOCK_SIZE <= size) {
             block_index = next_block_index;
@@ -245,6 +247,7 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
             memcpy(disk->data[block_index], data + written_size, BLOCK_SIZE);
             written_size += BLOCK_SIZE;
         }
+        // TODO: set -1
         // 处理文件剩余大小不满一整块时的情况
         if (written_size < size) {
             block_index = next_block_index;
@@ -254,10 +257,18 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
             disk->FAT1[block_index] = -1;
             disk->FAT2[block_index] = -1;
             memcpy(disk->data[block_index], data + written_size, size - written_size);
+        } else if (written_size == size) {
+            disk->FAT1[block_index] = -1;
+            disk->FAT2[block_index] = -1;
+        } else {
+            // Error!
+            fprintf(stderr, "Error: write file error. written size too large.\n");
+            return false;
         }
     }
     return true;
 }
+
 /**
  * 从磁盘中读取文件，读到内存中
  * @param fcb
@@ -316,6 +327,8 @@ bool format_disk(char **args) {
     FCB *root_fcb = malloc(sizeof(FCB));
     root_fcb->file_size = sizeof(DIR);
     root_fcb->base_index = 0;
+    // 1. base index
+    // 2. file size
     root_fcb->is_free = false;
     root_fcb->is_dir = true;
     // 将目录信息写入磁盘
@@ -350,6 +363,7 @@ bool mkdir(char **args) {
         return false;
     }
     read_current_dir();
+
     current_dir->content[index_in_current_dir].is_free = false;
     strcpy(current_dir->content[index_in_current_dir].name, args[1]);
     current_dir->content[index_in_current_dir].is_dir = true;
@@ -432,13 +446,13 @@ bool touch(char **args) {
         return false;
     }
     int index_in_disk = find_empty_block_in_FAT(-1);
-    if (index_in_disk == -1 ) {
+    if (index_in_disk == -1) {
         fprintf(stderr, "The disk is full.\n");
         return false;
     }
     current_dir->content[index_in_dir].base_index = index_in_disk;
     current_dir->content[index_in_dir].is_dir = false;
-    strcpy(current_dir->content[index_in_dir].name , args[1]);
+    strcpy(current_dir->content[index_in_dir].name, args[1]);
     current_dir->content[index_in_dir].is_free = false;
     current_dir->content[index_in_dir].file_size = 1;
     write_to_disk(&current_dir->content[index_in_dir], "", sizeof(""));
@@ -488,6 +502,7 @@ bool write_data(char **args) {
         return false;
     }
     char buffer[1024];
+//    TODO: implement getting data from user later.
     strcpy(buffer, "TODO: change write_data method later.\n");
     current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
     write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
@@ -506,8 +521,52 @@ bool cat(char **args) {
         fprintf(stderr, "%s not found\n", args[1]);
         return false;
     }
-    char *data =(char*) read_from_disk(&current_dir->content[index_in_dir]);
+    char *data = (char *) read_from_disk(&current_dir->content[index_in_dir]);
     printf("%s\n", data);
     free(data);
+    return true;
+}
+
+bool rm_dir(char **args) {
+
+    if (args[1] == NULL || args[2] != NULL) {
+        fprintf(stderr, "Error! cd usage: cd dir_name\n");
+        return false;
+    }
+    read_current_dir();
+    int content_index = find_index_in_current_dir_by_name(args[1]);
+    if (content_index == -1) {
+        fprintf(stderr, "Error. %s not found.\n", args[1]);
+        return false;
+    }
+    if (current_dir->content[content_index].is_dir == false) {
+        fprintf(stderr, "Error. %s is not a directory.\n", args[1]);
+        return false;
+    }
+    if (is_dir_empty(&current_dir->content[content_index]) == false) {
+        fprintf(stderr, "The dir is not empty!\n");
+        return false;
+    }
+    __rm_fcb(&current_dir->content[content_index]);
+    current_dir->content[content_index].is_free = true;
+    current_dir->content[content_index].base_index = -1;
+    current_dir->content[content_index].file_size = 0;
+    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+
+    return true;
+}
+
+bool is_dir_empty(FCB *fcb) {
+    DIR *dir = (DIR*) read_from_disk(fcb);
+    if (dir == NULL) {
+        return false;
+    }
+    for (int i = 2; i < MAX_CONTENT_NUM; i++) {
+        if (dir->content[i].is_free == false) {
+            free(dir);
+            return false;
+        }
+    }
+    free(dir);
     return true;
 }

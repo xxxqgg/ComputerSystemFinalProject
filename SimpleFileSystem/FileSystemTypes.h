@@ -30,6 +30,7 @@ typedef struct FCB {
 // DIR store in ONE BLOCK, size = 4KB
 typedef struct DIR {
     // TODO:
+    // . ..
     FCB content[MAX_CONTENT_NUM];
 } DIR;
 

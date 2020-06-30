@@ -16,6 +16,7 @@ bool touch(char **args);
 bool rm(char **args);
 bool write_data(char **args);
 bool cat(char **args);
+bool rm_dir(char **args);
 static const char *api_str[] = {
         "init",
         "format",
@@ -26,6 +27,7 @@ static const char *api_str[] = {
         "rm",
         "write",
         "cat",
+        "rmdir"
 };
 static bool (* const apis[]) (char**) = {
         &init_file_system,
@@ -37,6 +39,7 @@ static bool (* const apis[]) (char**) = {
         &rm,
         &write_data,
         &cat,
+        &rm_dir,
 };
 static int num_of_api() {
     return sizeof(api_str) / sizeof(char *);
