@@ -4,5 +4,5 @@ project(ComputerFinalProject C)
 set(CMAKE_C_STANDARD 99)
 
 # TODO: Group files later
-add_executable(ComputerFinalProject main.c utils.c jsh_config.c builtins.c jsh_api.c SimpleFileSystem/FileSystemAPI.c
+add_executable(fs main.c utils.c jsh_config.c builtins.c jsh_api.c SimpleFileSystem/FileSystemAPI.c
         SimpleFileSystem/FileSystemConfig.c)
