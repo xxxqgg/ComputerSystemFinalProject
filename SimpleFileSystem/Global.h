@@ -10,8 +10,5 @@ extern int shared_memory_size;
 extern Disk *disk;
 extern char current_path[];
 extern DIR* current_dir;
-extern short FAT1[];
-extern short FAT2[];
-extern int FAT_LEN;
 extern FCB* current_fcb;
 #endif //COMPUTERFINALPROJECT_GLOBAL_H

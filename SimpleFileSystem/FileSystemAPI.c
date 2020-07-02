@@ -137,6 +137,8 @@ bool init_file_system(char **args) {
         root_fcb->is_dir = true;
         current_fcb = root_fcb;
         read_current_dir();
+    } else {
+        printf("You should use format to format the disk\n");
     }
     return true;
 }
@@ -208,7 +210,6 @@ bool write_to_disk(FCB *fcb, void *data) {
      * 如果该位置曾今有数据，将这部分数据抹除
      * 要抹除是为了更新数据时，将数据写入原地址中。
      */
-
     while (disk->FAT1[block] != -1 && disk->FAT1[block] != 0) {
         int prev = block;
         block = disk->FAT1[block];
@@ -297,7 +298,6 @@ byte *read_from_disk(FCB *fcb) {
             if (block_index == -1) {
                 return NULL;
             }
-
             // 通过 data+read_size 的方式，分块将文件块读入内存
             memcpy(data + read_size, disk->data[block_index], BLOCK_SIZE);
             read_size += BLOCK_SIZE;
