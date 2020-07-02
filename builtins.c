@@ -15,7 +15,7 @@ int help(char **args) {
     printf("%-10s  %s\n", "init", "初始化系统，挂载磁盘");
     printf("%-10s  %s\n", "pwd", "输出当前路径");
     printf("%-10s  %s\n", "ls", "显示当前路径中全部文件");
-    printf("%-10s  %s\n", "mkdir", "make directories");
+    printf("%-10s  %s\n", "fs_mkdir", "make directories");
     printf("%-10s  %s\n", "cd", "change working directory");
     printf("%-10s  %s\n", "create", "create new file");
     printf("%-10s  %s\n", "rm", "remove files");

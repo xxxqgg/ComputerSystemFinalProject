@@ -9,7 +9,7 @@
 
 bool init_file_system(char **args);
 bool format_disk(char **args);
-bool mkdir(char **args);
+bool fs_mkdir(char **args);
 bool ls(char **args);
 
 bool cd(char **args);
@@ -35,7 +35,7 @@ static const char *api_str[] = {
 static bool (* const apis[]) (char**) = {
         &init_file_system,
         &format_disk,
-        &mkdir,
+        &fs_mkdir,
         &ls,
         &cd,
         &touch,

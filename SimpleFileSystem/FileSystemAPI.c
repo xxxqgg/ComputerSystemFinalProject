@@ -350,10 +350,10 @@ bool format_disk(char **args) {
     return true;
 }
 
-bool mkdir(char **args) {
+bool fs_mkdir(char **args) {
     if (args[1] == NULL) {
         printf("Not a valid position.\n");
-        printf("Usage: mkdir dirname.\n");
+        printf("Usage: fs_mkdir dirname.\n");
         return false;
     }
     int index = find_index_in_current_dir_by_name(args[1]);
