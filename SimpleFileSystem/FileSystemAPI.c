@@ -618,7 +618,7 @@ bool cat(char **args) {
         sem_post(read_sem);
     }
 
-
+    read_current_dir();
     sleep(2);
     char *data = (char *) read_from_disk(&current_dir->content[index_in_dir]);
     printf("%s\n", data);
