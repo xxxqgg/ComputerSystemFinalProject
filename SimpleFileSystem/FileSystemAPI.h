@@ -30,7 +30,8 @@ static const char *api_str[] = {
         "write",
         "cat",
         "rmdir",
-        "chname"
+        "chname",
+        "open"
 };
 static bool (* const apis[]) (char**) = {
         &init_file_system,
@@ -44,6 +45,7 @@ static bool (* const apis[]) (char**) = {
         &cat,
         &rm_dir,
         &chname,
+        &touch
 };
 static int num_of_api() {
     return sizeof(api_str) / sizeof(char *);
