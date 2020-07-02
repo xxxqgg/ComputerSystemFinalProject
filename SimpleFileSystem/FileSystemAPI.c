@@ -479,8 +479,8 @@ bool touch(char **args) {
 
     char read[BUFFER_SIZE];
     sprintf(read, "%s%dread", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
-    sem_open(write, IPC_CREAT, 0644, 1);
-    sem_open(read, IPC_CREAT, 0644, 0);
+    sem_open(write, O_CREAT, 0644, 1);
+    sem_open(read, O_CREAT, 0644, 0);
 
 
     write_to_disk(&current_dir->content[index_in_dir], "");
