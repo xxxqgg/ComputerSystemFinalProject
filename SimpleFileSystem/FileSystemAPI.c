@@ -739,7 +739,7 @@ bool chname(char **args) {
         sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
         sem_open(write, O_CREAT, 0644, 1);
         sem_open(read, O_CREAT, 0644, 0);
-
+        sem_post(write_sem);
         // 释放旧的信号量
         sem_close(write_sem);
         sem_close(read_sem);
