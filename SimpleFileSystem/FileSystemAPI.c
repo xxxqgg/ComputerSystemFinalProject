@@ -201,8 +201,6 @@ bool did_format() {
  */
 bool write_to_disk(FCB *fcb, void *data) {
     int size = fcb->file_size;
-    printf("size = %d\n", size);
-    fcb->file_size = size;
     int written_size = 0;
     fcb->file_size = size;
     int block = fcb->base_index;
