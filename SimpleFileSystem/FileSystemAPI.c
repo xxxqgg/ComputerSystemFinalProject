@@ -2,10 +2,11 @@
 // Created by Jerry Zhang on 2020-06-30.
 //
 /**
- * 代码阅读顺序（执行顺序）
+ * 代码执行顺序
  * 1. init - 从共享内存读出磁盘数据（如果没有则创建）
  * 2. format - 格式化磁盘为 FAT32
- * 3. init DIR - 初始化为
+ * 3. init DIR - 初始化 /
+ * 4. xxx
  */
 #include "FileSystemAPI.h"
 #include "FileSystemTypes.h"
@@ -19,7 +20,7 @@
 
 byte *read_from_disk(FCB *fcb);
 
-bool write_to_disk(FCB *fcb, void *data, int size);
+bool write_to_disk(FCB *fcb, void *data);
 
 bool did_format();
 
@@ -153,6 +154,7 @@ DIR *init_dir(int block_index, int father_block_index) {
     parent.is_free = false;
     parent.is_dir = true;
     dir->content[1] = parent;
+
     for (int i = 2; i < MAX_CONTENT_NUM; i++) {
         dir->content[i].is_free = true;
     }
@@ -189,7 +191,8 @@ bool did_format() {
  * @param size
  * @return
  */
-bool write_to_disk(FCB *fcb, void *data, int size) {
+bool write_to_disk(FCB *fcb, void *data) {
+    int size = fcb->file_size;
     printf("size = %d\n", size);
     printf("block_size = %d\n", BLOCK_SIZE);
     fcb->file_size = size;
@@ -333,7 +336,7 @@ bool format_disk(char **args) {
     root_fcb->is_free = false;
     root_fcb->is_dir = true;
     // 将目录信息写入磁盘
-    write_to_disk(root_fcb, root, root_fcb->file_size);
+    write_to_disk(root_fcb, root);
     // TODO: Should we make current dir local variable???
     current_dir = (DIR *) read_from_disk(root_fcb);
     current_fcb = root_fcb;
@@ -371,9 +374,9 @@ bool mkdir(char **args) {
     current_dir->content[index_in_current_dir].base_index = index_in_disk;
     current_dir->content[index_in_current_dir].file_size = sizeof(DIR);
     DIR *new_dir = init_dir(index_in_disk, current_dir->content[0].base_index);
-    bool res = write_to_disk(&current_dir->content[index_in_current_dir], new_dir,
-                             current_dir->content[index_in_current_dir].file_size);
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+
+    bool res = write_to_disk(&current_dir->content[index_in_current_dir], new_dir);
+    write_to_disk(current_fcb, current_dir);
     return res;
 }
 
@@ -463,10 +466,10 @@ bool touch(char **args) {
     current_dir->content[index_in_dir].is_dir = false;
     strcpy(current_dir->content[index_in_dir].name, args[1]);
     current_dir->content[index_in_dir].is_free = false;
-    current_dir->content[index_in_dir].file_size = 1;
-    write_to_disk(&current_dir->content[index_in_dir], "", sizeof(""));
+    current_dir->content[index_in_dir].file_size = sizeof("");
+    write_to_disk(&current_dir->content[index_in_dir], "");
 
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    write_to_disk(current_fcb, current_dir);
     return true;
 }
 
@@ -496,7 +499,7 @@ bool rm(char **args) {
     }
     __rm_fcb(&current_dir->content[index_in_folder]);
     current_dir->content[index_in_folder].is_free = true;
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    write_to_disk(current_fcb, current_dir);
     return true;
 }
 
@@ -524,7 +527,7 @@ bool write_data(char **args) {
         printf("BUFFER:\n");
         printf("%s", buffer);
         current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
-        write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+        write_to_disk(&current_dir->content[index_in_dir], buffer);
     } else if (strcmp(args[2], "a") == 0) {
         char *buffer = malloc(current_dir->content[index_in_dir].file_size + BUFFER_SIZE);
         char *current_data = (char *) read_from_disk(&current_dir->content[index_in_dir]);
@@ -533,11 +536,11 @@ bool write_data(char **args) {
         fgets(input_buffer, BUFFER_SIZE, stdin);
         memcpy(buffer + current_dir->content[index_in_dir].file_size, input_buffer, BUFFER_SIZE);
         current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
-        write_to_disk(&current_dir->content[index_in_dir], buffer, current_dir->content[index_in_dir].file_size);
+        write_to_disk(&current_dir->content[index_in_dir], buffer);
         free(current_data);
         free(buffer);
     }
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    write_to_disk(current_fcb, current_dir);
     return true;
 }
 
@@ -582,7 +585,7 @@ bool rm_dir(char **args) {
     current_dir->content[content_index].is_free = true;
     current_dir->content[content_index].base_index = -1;
     current_dir->content[content_index].file_size = 0;
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    write_to_disk(current_fcb, current_dir);
 
     return true;
 }
@@ -613,6 +616,6 @@ bool chname(char **args) {
         return false;
     }
     strcpy(current_dir->content[content_index].name, args[2]);
-    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
+    write_to_disk(current_fcb, current_dir);
     return true;
 }
