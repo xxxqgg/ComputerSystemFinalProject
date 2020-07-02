@@ -409,8 +409,6 @@ bool ls(char **args) {
             } else {
                 type = "File";
             }
-
-
             printf("%-20s%-20s%-10d%-10d\n", current_dir->content[i].name, type, current_dir->content[i].file_size, current_dir->content[i].base_index);
         }
     }
@@ -585,8 +583,7 @@ bool write_data(char **args) {
     if (strcmp(args[2], "w") == 0) {
         char buffer[BUFFER_SIZE];
         fgets(buffer, BUFFER_SIZE, stdin);
-        printf("BUFFER:\n");
-        printf("%s", buffer);
+
         current_dir->content[index_in_dir].file_size = strlen(buffer) * sizeof(char);
         write_to_disk(&current_dir->content[index_in_dir], buffer);
     } else if (strcmp(args[2], "a") == 0) {
@@ -633,7 +630,7 @@ bool cat(char **args) {
     int read_count = -1;
 
     sem_getvalue(read_sem, &read_count);
-    printf("readcount = %d\n", read_count);
+    printf("reading count = %d\n", read_count);
     if (read_count > 0) {
         sem_post(read_sem);
     }
