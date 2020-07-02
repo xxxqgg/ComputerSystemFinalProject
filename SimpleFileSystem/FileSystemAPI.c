@@ -394,7 +394,7 @@ bool ls(char **args) {
         fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
         return false;
     }
-    printf("%-20s%-20s%-10s\n", "Name", "Type", "Size");
+    printf("%-20s%-20s%-10s%-10s\n", "Name", "Type", "Size", "Base");
     read_current_dir();
     if (current_dir == NULL) {
         return false;
@@ -411,7 +411,7 @@ bool ls(char **args) {
             }
 
 
-            printf("%-20s%-20s%-10d\n", current_dir->content[i].name, type, current_dir->content[i].file_size);
+            printf("%-20s%-20s%-10d%-10d\n", current_dir->content[i].name, type, current_dir->content[i].file_size, current_dir->content[i].base_index);
         }
     }
 
@@ -724,29 +724,35 @@ bool chname(char **args) {
         return false;
     }
 
-    // 更改文件名，需要信号量同步
-    char write[BUFFER_SIZE];
-    sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+    if(current_dir->content[content_index].is_dir == false) {
+        // 更改文件名，需要信号量同步
+        char write[BUFFER_SIZE];
+        sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
 
-    char read[BUFFER_SIZE];
-    sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
-    sem_t* write_sem = sem_open(write,0);
-    sem_t* read_sem = sem_open(read,0);
-    sem_wait(write_sem);
+        char read[BUFFER_SIZE];
+        sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
 
-    strcpy(current_dir->content[content_index].name, args[2]);
-    write_to_disk(current_fcb, current_dir);
+        sem_t* write_sem = sem_open(write,0);
+        sem_t* read_sem = sem_open(read,0);
+        sem_wait(write_sem);
+        strcpy(current_dir->content[content_index].name, args[2]);
+        write_to_disk(current_fcb, current_dir);
 
+        // 为新的文件名创建新的信号量
 
-    // 为新的文件名创建新的信号量
+        sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+        sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+        sem_open(write, O_CREAT, 0644, 1);
+        sem_open(read, O_CREAT, 0644, 0);
 
-    sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
-    sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
-    sem_open(write, O_CREAT, 0644, 1);
-    sem_open(read, O_CREAT, 0644, 0);
+        // 释放旧的信号量
+        sem_close(write_sem);
+        sem_close(read_sem);
+    }
 
-    // 释放旧的信号量
-    sem_close(write_sem);
-    sem_close(read_sem);
+    else {
+        strcpy(current_dir->content[content_index].name, args[2]);
+        write_to_disk(current_fcb, current_dir);
+    }
     return true;
 }
