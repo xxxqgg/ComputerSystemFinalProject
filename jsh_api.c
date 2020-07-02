@@ -30,6 +30,7 @@ char **jsh_split_line(char *line) {
 
     return res;
 }
+
 int jsh_execute(char **args) {
     if (args == NULL || args[0] == NULL)
         return true;
