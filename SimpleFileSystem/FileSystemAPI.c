@@ -688,7 +688,30 @@ bool chname(char **args) {
         fprintf(stderr, "Error. %s not found.\n", args[1]);
         return false;
     }
+
+    // 更改文件名，需要信号量同步
+    char write[BUFFER_SIZE];
+    sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+
+    char read[BUFFER_SIZE];
+    sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+    sem_t* write_sem = sem_open(write,0);
+    sem_t* read_sem = sem_open(read,0);
+    sem_wait(write_sem);
+
     strcpy(current_dir->content[content_index].name, args[2]);
     write_to_disk(current_fcb, current_dir);
+
+
+    // 为新的文件名创建新的信号量
+
+    sprintf(write, "%s%dwrite", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+    sprintf(read, "%s%dread", current_dir->content[content_index].name, current_dir->content[content_index].base_index);
+    sem_open(write, O_CREAT, 0644, 1);
+    sem_open(read, O_CREAT, 0644, 0);
+
+    // 释放旧的信号量
+    sem_close(write_sem);
+    sem_close(read_sem);
     return true;
 }
