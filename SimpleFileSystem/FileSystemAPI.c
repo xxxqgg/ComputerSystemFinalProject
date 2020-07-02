@@ -17,6 +17,10 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include "Global.h"
+#include <unistd.h>
+#include <sys/shm.h>
+#include <semaphore.h>
+
 
 byte *read_from_disk(FCB *fcb);
 
@@ -462,11 +466,23 @@ bool touch(char **args) {
         fprintf(stderr, "The disk is full.\n");
         return false;
     }
+
     current_dir->content[index_in_dir].base_index = index_in_disk;
     current_dir->content[index_in_dir].is_dir = false;
     strcpy(current_dir->content[index_in_dir].name, args[1]);
     current_dir->content[index_in_dir].is_free = false;
     current_dir->content[index_in_dir].file_size = sizeof("");
+
+    // 在创建文件时，创建好信号量。
+    char write[BUFFER_SIZE];
+    sprintf(write, "%s%dwrite", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+
+    char read[BUFFER_SIZE];
+    sprintf(read, "%s%dread", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+    sem_open(write, O_CREAT, 0644, 1);
+    sem_open(read, O_CREAT, 0644, 0);
+
+
     write_to_disk(&current_dir->content[index_in_dir], "");
 
     write_to_disk(current_fcb, current_dir);
@@ -497,6 +513,16 @@ bool rm(char **args) {
         fprintf(stderr, "Error. %s is a dir, please use rmdir to remove it.\n", args[1]);
         return false;
     }
+
+    // 在删除文件时，删除掉信号量
+    char write[BUFFER_SIZE];
+    sprintf(write, "%s%dwrite", current_dir->content[index_in_folder].name, current_dir->content[index_in_folder].base_index);
+
+    char read[BUFFER_SIZE];
+    sprintf(read, "%s%dread", current_dir->content[index_in_folder].name, current_dir->content[index_in_folder].base_index);
+    sem_unlink(write);
+    sem_unlink(read);
+
     __rm_fcb(&current_dir->content[index_in_folder]);
     current_dir->content[index_in_folder].is_free = true;
     write_to_disk(current_fcb, current_dir);
@@ -521,6 +547,16 @@ bool write_data(char **args) {
         fprintf(stderr, "%s not found\n", args[1]);
         return false;
     }
+
+    // 写文件，需要信号量同步
+    char write[BUFFER_SIZE];
+    sprintf(write, "%s%dwrite", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+
+    char read[BUFFER_SIZE];
+    sprintf(read, "%s%dread", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+    sem_open(write,0);
+    sem_open(read,0);
+
     if (strcmp(args[2], "w") == 0) {
         char buffer[BUFFER_SIZE];
         fgets(buffer, BUFFER_SIZE, stdin);
@@ -555,9 +591,44 @@ bool cat(char **args) {
         fprintf(stderr, "%s not found\n", args[1]);
         return false;
     }
+
+    // 读文件，需要信号量同步
+    char write[BUFFER_SIZE];
+    sprintf(write, "%s%dwrite", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+
+    char read[BUFFER_SIZE];
+    sprintf(read, "%s%dread", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
+    sem_t* write_sem = sem_open(write,0);
+    sem_t* read_sem = sem_open(read,0);
+    int read_count = -1;
+
+    sem_getvalue(read_sem, &read_count);
+    printf("readcount = %d\n", read_count);
+    if (read_count > 0) {
+        sem_post(read_sem);
+    }
+    else {
+        sem_wait(write_sem);
+        sem_post(read_sem);
+    }
+
+
+    sleep(2);
     char *data = (char *) read_from_disk(&current_dir->content[index_in_dir]);
     printf("%s\n", data);
     free(data);
+
+    // 结束时，释放
+    sem_getvalue(read_sem, &read_count);
+    if (read_count < 1) {
+        fprintf(stderr, "Error! in sem, readcount = %d\n", read_count);
+    }
+
+    if (read_count == 1) {
+        sem_post(write_sem);
+
+    }
+    sem_wait(read_sem);
     return true;
 }
 
