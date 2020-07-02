@@ -26,7 +26,6 @@ void exit_on_failure(int result, char *message) {
 
 int getLine(char *prompt, char *buff, size_t sz) {
     int ch, extra;
-
     // Get line with buffer overrun protection.
     if (prompt != NULL) {
         printf("%s", prompt);

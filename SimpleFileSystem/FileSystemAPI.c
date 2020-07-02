@@ -145,7 +145,7 @@ DIR *init_dir(int block_index, int father_block_index) {
     self.is_free = false;
     self.is_dir = true;
     dir->content[0] = self;
-
+    // Dir FCB
     FCB parent;
     strcpy(parent.name, "..");
     parent.base_index = father_block_index;
@@ -215,6 +215,7 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
     if (size <= BLOCK_SIZE) {
         int block_index = fcb->base_index;
         if (block_index == -1) {
+
             return false;
         }
         disk->FAT1[block_index] = -1;
@@ -246,6 +247,7 @@ bool write_to_disk(FCB *fcb, void *data, int size) {
             memcpy(disk->data[block_index], data + written_size, BLOCK_SIZE);
             written_size += BLOCK_SIZE;
         }
+        // block size = 4 A = 11
         // 处理文件剩余大小不满一整块时的情况
         if (written_size < size) {
             block_index = next_block_index;
@@ -318,7 +320,7 @@ bool format_disk(char **args) {
         return false;
     }
     // 首先初始化 root 目录，root 目录父目录设置为自己
-
+    // File size = sizeof(DIR) 0
     DIR *root = init_dir(0, 0);
     memset(disk->FAT1, 0, sizeof(disk->FAT1));
     memset(disk->FAT2, 0, sizeof(disk->FAT2));
@@ -396,6 +398,7 @@ bool ls(char **args) {
             printf("%-20s%-20s%-10d\n", current_dir->content[i].name, type, current_dir->content[i].file_size);
         }
     }
+
     return true;
 }
 
@@ -416,6 +419,7 @@ bool cd(char **args) {
     }
     if (strcmp(".", args[1]) == 0) {
         return true;
+
     } else if (strcmp("..", args[1]) == 0) {
         current_fcb->base_index = current_dir->content[content_index].base_index;
         if (strcmp(current_path, "/") != 0) {
@@ -423,6 +427,8 @@ bool cd(char **args) {
             char *loc = strrchr(current_path, '/');
             *(loc + 1) = 0;
         }
+    // .
+    // ..
     } else {
         current_fcb->base_index = current_dir->content[content_index].base_index;
         strcat(current_path, current_dir->content[content_index].name);
@@ -459,6 +465,7 @@ bool touch(char **args) {
     current_dir->content[index_in_dir].is_free = false;
     current_dir->content[index_in_dir].file_size = 1;
     write_to_disk(&current_dir->content[index_in_dir], "", sizeof(""));
+
     write_to_disk(current_fcb, current_dir, current_fcb->file_size);
     return true;
 }
@@ -592,5 +599,20 @@ bool is_dir_empty(FCB *fcb) {
         }
     }
     free(dir);
+    return true;
+}
+bool chname(char **args) {
+    if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
+        fprintf(stderr, "Error! chname usage: chname old_name new_name\n");
+        return false;
+    }
+    read_current_dir();
+    int content_index = find_index_in_current_dir_by_name(args[1]);
+    if (content_index == -1) {
+        fprintf(stderr, "Error. %s not found.\n", args[1]);
+        return false;
+    }
+    strcpy(current_dir->content[content_index].name, args[2]);
+    write_to_disk(current_fcb, current_dir, current_fcb->file_size);
     return true;
 }

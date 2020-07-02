@@ -31,7 +31,9 @@ typedef struct FCB {
 typedef struct DIR {
     // TODO:
     // . ..
-    FCB content[MAX_CONTENT_NUM];
+//    FCB self;
+//    FCB father;
+    FCB content[MAX_CONTENT_NUM]; // . content[0] .. content[1]
 } DIR;
 
 /**
