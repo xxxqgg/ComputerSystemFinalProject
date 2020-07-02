@@ -558,7 +558,10 @@ bool write_data(char **args) {
     sprintf(read, "%s%dread", current_dir->content[index_in_dir].name, current_dir->content[index_in_dir].base_index);
     sem_open(write,0);
     sem_open(read,0);
-
+    sem_t* write_sem = sem_open(write,0);
+    sem_t* read_sem = sem_open(read,0);
+    sem_wait(write_sem);
+    printf("Please input your data:\n");
     if (strcmp(args[2], "w") == 0) {
         char buffer[BUFFER_SIZE];
         fgets(buffer, BUFFER_SIZE, stdin);
@@ -578,6 +581,7 @@ bool write_data(char **args) {
         free(current_data);
         free(buffer);
     }
+    sem_post(write_sem);
     write_to_disk(current_fcb, current_dir);
     return true;
 }
