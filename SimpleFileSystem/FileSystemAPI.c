@@ -200,7 +200,6 @@ bool did_format() {
 bool write_to_disk(FCB *fcb, void *data) {
     int size = fcb->file_size;
     printf("size = %d\n", size);
-    printf("block_size = %d\n", BLOCK_SIZE);
     fcb->file_size = size;
     int written_size = 0;
     fcb->file_size = size;
@@ -561,6 +560,7 @@ bool write_data(char **args) {
     sem_t* write_sem = sem_open(write,0);
     sem_t* read_sem = sem_open(read,0);
     sem_wait(write_sem);
+    read_current_dir();
     printf("Please input your data:\n");
     if (strcmp(args[2], "w") == 0) {
         char buffer[BUFFER_SIZE];
