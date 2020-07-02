@@ -19,6 +19,8 @@
 #include "Global.h"
 #include <unistd.h>
 #include <sys/shm.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <semaphore.h>
 
 
