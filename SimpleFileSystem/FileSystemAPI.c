@@ -350,6 +350,10 @@ bool format_disk(char **args) {
 }
 
 bool fs_mkdir(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL) {
         printf("Not a valid position.\n");
         printf("Usage: fs_mkdir dirname.\n");
@@ -386,6 +390,10 @@ bool fs_mkdir(char **args) {
 }
 
 bool ls(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     printf("%-20s%-20s%-10s\n", "Name", "Type", "Size");
     read_current_dir();
     if (current_dir == NULL) {
@@ -411,6 +419,10 @@ bool ls(char **args) {
 }
 
 bool cd(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     read_current_dir();
     if (args[1] == NULL || args[2] != NULL) {
         fprintf(stderr, "Error! cd usage: cd dir_name\n");
@@ -447,6 +459,10 @@ bool cd(char **args) {
 }
 
 bool touch(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL || args[2] != NULL) {
         fprintf(stderr, "Usage: touch filename\n");
         return false;
@@ -500,6 +516,10 @@ void detach() {
 }
 
 bool rm(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL || args[2] != NULL) {
         fprintf(stderr, "Error. Usage: rm file_name.\n");
         return false;
@@ -587,6 +607,10 @@ bool write_data(char **args) {
 }
 
 bool cat(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL || args[2] != NULL) {
         fprintf(stderr, "Usage: touch filename\n");
         return false;
@@ -639,7 +663,10 @@ bool cat(char **args) {
 }
 
 bool rm_dir(char **args) {
-
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL || args[2] != NULL) {
         fprintf(stderr, "Error! cd usage: cd dir_name\n");
         return false;
@@ -682,6 +709,10 @@ bool is_dir_empty(FCB *fcb) {
     return true;
 }
 bool chname(char **args) {
+    if(!did_format()) {
+        fprintf(stderr, "You have to init and format the disk using init and format!!!!\n");
+        return false;
+    }
     if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
         fprintf(stderr, "Error! chname usage: chname old_name new_name\n");
         return false;
